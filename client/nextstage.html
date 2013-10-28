@@ -1,0 +1,212 @@
+<head>
+  <title>MissionCritical</title>
+</head>
+
+<body>
+ <div id="wrap">
+    {{> ribbon}}
+    {{> main}}
+ </div>
+  {{> footer}}
+</body>
+
+<template name="main">
+  <div id="main" class="container clear-top">
+  {{#if isLoggedIn}}
+    {{> navi}}
+    {{> search}}
+    {{> devices_display}}
+    {{> todos_list}}
+  {{else}}
+    {{> loginform}}
+  {{/if}}
+  </div>
+</template>
+
+<template name="search">
+ <div id="search_box" class="container-fluid">
+  <div class="span4" style="vertical-align: middle">
+   <form class="well search-form" id="typeahead">
+   <input id="search_text" type="text" class="typeahead input-text-block" placeholder="Name" /> 
+   <br />
+   <a id="search-nodes" data-toggle="modal" href="#search_results" class="search-Nodes btn btn-primary" type="submit"><i class="icon-white icon-search"></i> Search</a>
+   </form>
+  </div>
+ </div>
+</template>
+
+<template name="devices_display">
+ <div id="search_results" class="modal fade in" style="display: none; ">
+  {{> modal}}
+ </div>
+</template>
+
+<template name="modal">
+ <div class="modal-header">
+  <div id="nodename">
+    {{#if found_device}}
+      <small>Name : {{found_device.name}}</small>
+    {{else}}
+	<small>Not found !</small>
+     {{/if}}
+     <br />
+  </div>
+ </div>
+ <div class="modal-body">
+   <div id="nodedetails">
+     {{#if found_device}}
+        <form class="well">
+        <input id="device_name" class="input-block-level" type="text" value="{{{found_device.name}}}" readonly>
+        </input>
+        <input id="device_key" class="input-block-level" type="text" value="{{{found_device.key}}}" readonly>
+        </input>
+        <input id="mesg_title" class="input-block-level" type="text" placeholder="Message title">
+        </input>
+        <textarea id="mesg_text" class="input-block-level" placeholder="Message text">
+        </textarea>
+        </form>
+     {{else}}
+	Valid name is required.
+     {{/if}}
+   </div>
+ </div>
+ <div class="modal-footer">
+ {{#if isNotAvailableForAlert found_device}}
+    <div class="alert-error alert-block" style="text-align: center; ">
+      This device is not available for alerting because :  <br />
+      {{isNotAvailableForAlert found_device}}
+    </div>
+    <br />
+ {{else}}
+  <div class="dropdown btn-group">
+   <a id="schedalertbtn" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" href="#">
+        <i class="icon-white icon-time"></i>
+        Schedule Alert
+        <span class="caret"></span>
+   </a>
+   <ul class="dropdown-menu">
+     <li><a id="alertnowbtn" href="#">Now</a></li>
+     <li><a id="30minbtn" href="#">30 mins</a></li>
+   </ul>
+  </div> 
+ {{/if}}
+  
+  <a href="#" id="closebtn" class="btn btn-inverse" data-dismiss="modal"><i class="icon-white icon-remove"></i> Close</a>
+ </div>
+</template>
+
+<template name="navi">
+ <div id="navi_bar" class="container">
+  <div class="span11">
+   <ul class="nav nav-pills">
+    <li class="active"> <a href="#"><i class="icon-home"></i> Home</a> </li>
+    <li><a href="#" id="helpbutton" rel="popover" data-content="Start typing name below and click Search button"><i class="icon-info-sign"></i> Help</a></li>
+    <!--<li><a href="#" id="logout" rel="popover" data-content="Logout">Logout</a></li> -->
+    <div class="dropdown btn-group pull-right">
+     <a id="logoutdropdwn" class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+        <i class="icon-user"></i>
+        {{logged_in_user}}
+        <span class="caret"></span>
+   </a>
+   <ul class="dropdown-menu">
+     <li><a id="logout" href="#">Logout</a></li>
+   </ul>
+  </div>
+
+     </ul>
+  </div>
+ </div>
+</template>
+
+<template name="footer">
+   <footer class="footer" style="text-align:center">
+    <small>&copy {{copyright}}</small>
+   </footer>
+</template>
+
+<template name="loginform">
+ <div class="row">
+  <form class="form-signin">
+    <h3 class="form-signin-heading">Please sign in</h3>
+    <input id="login_id" type="text" class="input-block-level" placeholder="Login">
+    <input id="pswd" type="password" class="input-block-level" placeholder="Password">
+    <button id="loginbtn" class="btn btn-large btn-primary">Login</button>
+  </form>
+  </div>
+   {{#if login_failed}}
+    <div class="row" style="text-align:center">
+     {{>login_failure}}
+    </div>
+   {{/if}}
+ </div>
+</template>
+
+<template name="todos_list">
+  <div id="todos_list_table" class="span11">
+   <table class="table table-hover table-bordered table-condensed">
+     {{#if todos}}
+     <thead>
+      <tr>
+        <th colspan="5"><h4>Recent Alerts</h4></th>
+      </tr>
+      <tr>
+       <th class="span2" style="text-align:center">Requested For</th>
+       <th class="span2" style="text-align:center">Name</th>
+       <th class="span1" style="text-align:center">Requestor</th>
+       <th class="span6">Status</th>
+       <th class="span1" style="text-align:center">Action</th>
+      </tr>
+     </thead>
+     <tbody>
+      {{#each todos}}
+      <tr style="height: 20px; ">
+       <!-- TODO: style needs to go in CSS file -->
+       <td id="tstamp" style="vertical-align: middle; text-align:center">{{tstampFormat timestamp}}</td>
+       <td style="vertical-align: middle; text-align:center">{{name}}</td>
+       <td style="vertical-align: middle; text-align:center">{{requestor}}</td>
+       <td style="vertical-align: middle">
+        <div class="accordion {{{alertType status}}}" id="{{{_id}}}" style="height: auto; margin: 0px; ">
+         <div class="accordion-group">
+          <div class="accordion-heading">
+           <a class="accordion-toggle" data-toggle="collapse" data-parent="#{{{_id}}}" href="#collapse{{{_id}}}"><i class="icon-plus-sign"></i> {{status}}</a>
+          </div>
+          <div id="collapse{{{_id}}}" class="accordion-body collapse" style="height: 0px; ">
+           <div class="accordion-inner">
+            {{#each sts}}
+              <li>[{{tstampHrMin ts}}]:{{stat}}</li>
+            {{/each}}
+           </div>
+         </div>
+        </div> 
+       </td>
+      <td style="vertical-align:middle; text-align:center">
+       {{#if isCancellable status}}
+	<button id="cancelbtn_{{{_id}}}" class="cancelbtn btn btn-primary">Cancel</button>
+       {{/if}}
+      </td>
+      </tr>
+      {{/each}}
+     </tbody>
+     {{else}}
+     <h4>No recent alerts</h4>
+    {{/if}}
+   </table>
+  </div>
+</template>
+
+<template name="login_failure">
+  <div class="span4 offset4">  
+   <div class="alert">
+     <a class="close" data-dismiss="alert">×</a>  
+     <strong>Warning!</strong> {{failure_msg}}
+   </div>
+  </div>  
+</template>
+
+<template name="ribbon">
+  <div class="ribbon-wrapper">
+    <div class="ribbon success">
+        {{run_env}}
+    </div>
+  </div>
+</template>
